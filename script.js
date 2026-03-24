@@ -14,34 +14,44 @@ document.addEventListener("DOMContentLoaded", function() {
   const video = document.getElementById("introVideo");
   const menuContainer = document.getElementById("menuContainer");
   const audio = document.getElementById("bgAudio");
+  const toggleBtn = document.getElementById("audioToggle");
 
-  // Simulate a click after load to unlock audio
-  setTimeout(() => {
-    const fakeClick = new MouseEvent("click", { bubbles: true, cancelable: true });
-    document.body.dispatchEvent(fakeClick);
+  // Try to start audio muted + fade in
+  if (audio) {
+    audio.volume = 0;
+    audio.muted = false;
+    audio.loop = true;
 
-    if (audio) {
-      audio.volume = 0;
-      audio.muted = false;
-      audio.loop = true;
-      audio.play().then(() => {
-        console.log("Background audio started automatically.");
-        // Smooth fade-in
-        let vol = 0;
-        const fade = setInterval(() => {
-          if (vol < 1) {
-            vol += 0.05;
-            audio.volume = vol;
-          } else {
-            clearInterval(fade);
-          }
-        }, 200);
-      }).catch(err => {
-        console.log("Autoplay blocked: ", err);
-      });
-    }
-  }, 300); // slight delay so page is ready
+    audio.play().then(() => {
+      let vol = 0;
+      const fade = setInterval(() => {
+        if (vol < 1) {
+          vol += 0.05;
+          audio.volume = vol;
+        } else {
+          clearInterval(fade);
+        }
+      }, 200);
+    }).catch(err => {
+      console.log("Autoplay blocked:", err);
+    });
+  }
 
+  // Toggle mute/unmute with button
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      if (audio.muted || audio.volume === 0) {
+        audio.muted = false;
+        audio.volume = 1;
+        toggleBtn.textContent = "🔊"; // sound on
+      } else {
+        audio.muted = true;
+        toggleBtn.textContent = "🔇"; // sound off
+      }
+    });
+  }
+
+  // Handle video ending
   if (video) {
     video.removeAttribute("controls");
     video.addEventListener("contextmenu", e => e.preventDefault());
