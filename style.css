@@ -51,15 +51,21 @@ body {
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 0 10px #00f, 0 0 20px #00f; /* neon glow */
 }
 
 .menu button:hover {
   background: #0056b3;
   transform: scale(1.05);
+  box-shadow: 0 0 15px #00f, 0 0 30px #00f;
 }
 
+/* Footer text */
 #footerText {
   margin-top: 20px;
-  font-size: 14px;
+  font-size: 16px;
   color: #ff4d4d;
+  text-shadow: 0 0 5px #ff4d4d, 0 0 10px #ff4d4d; /* neon glow */
+  position: relative;
+  z-index: 10; /* ensures it stays above video */
 }
