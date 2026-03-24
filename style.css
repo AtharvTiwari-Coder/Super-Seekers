@@ -67,6 +67,36 @@ body {
     0 0 30px royalblue, 
     inset 0 0 15px royalblue;
 }
+/* Highlight footer text */
+#footerText {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #ff4d4d, #ff9999, #ff4d4d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 
+    0 0 8px rgba(255,77,77,0.9),
+    0 0 16px rgba(255,77,77,0.7),
+    0 0 24px rgba(255,77,77,0.5);
+  animation: glowPulse 2s infinite alternate;
+  z-index: 11;
+}
+
+/* Glow animation */
+@keyframes glowPulse {
+  from {
+    text-shadow: 
+      0 0 6px rgba(255,77,77,0.8),
+      0 0 12px rgba(255,77,77,0.6);
+  }
+  to {
+    text-shadow: 
+      0 0 12px rgba(255,77,77,1),
+      0 0 24px rgba(255,77,77,0.9),
+      0 0 36px rgba(255,77,77,0.7);
+  }
+}
 
 #footerText {
   margin-top: 40px;
