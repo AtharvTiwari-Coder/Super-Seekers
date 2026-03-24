@@ -1,141 +1,32 @@
-/* Basic layout and fallback */
-:root{
-  --accent-blue: #00b3ff;
-  --accent-blue-dark: #0077b3;
-  --neon-red: #ff4d4d;
-  --bg-fallback: #000000;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Seekers - Start</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Intro Video -->
+  <video id="introVideo" autoplay muted playsinline>
+    <source src="Videos/MainMIntro.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
 
-* { box-sizing: border-box; }
-html,body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg-fallback);
-  color: #fff;
-  font-family: 'Claigo', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-  text-align: center;
-}
+  <!-- Background Audio -->
+  <audio id="bgAudio" src="Audios/MainMLoopA.mp3" loop></audio>
 
-/* Video background */
-#introVideo {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -2;
-  background: var(--bg-fallback);
-  pointer-events: none;
-}
+  <!-- Heading + Menu -->
+  <div id="menuContainer" style="display:none;">
+    <h1 id="gameTitle">SUPER SEEKERS</h1>
+    <div id="menu" class="menu">
+      <button class="play-btn" onclick="startGame()">Play</button>
+      <button class="settings-btn" onclick="openSettings()">Settings</button>
+      <button class="exit-btn" onclick="exitGame()">Exit</button>
+    </div>
+    <footer id="footerText">MADE BY ❤️ FROM ABHIRAJ AND ATHARV</footer>
+  </div>
 
-/* Dim overlay so text is readable on bright frames */
-#introVideo::after { content: ""; }
-
-/* Audio toggle button (top-right) */
-.audio-btn {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  font-size: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1000;
-  transition: transform .12s ease, background .12s ease;
-  box-shadow: 0 0 8px rgba(0,0,0,0.6), 0 0 12px rgba(0,179,255,0.08);
-}
-.audio-btn:hover { transform: translateY(-2px); background: rgba(0,0,0,0.7); }
-
-/* Center container for title + menu */
-.menu-container {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  z-index: 10;
-  padding: 24px;
-  pointer-events: auto;
-}
-
-/* Neon title */
-.neon-title {
-  margin: 0;
-  font-size: clamp(28px, 6vw, 64px);
-  letter-spacing: 6px;
-  color: #fff;
-  text-transform: uppercase;
-  text-shadow:
-    0 0 6px rgba(0,179,255,0.9),
-    0 0 18px rgba(0,179,255,0.6),
-    0 6px 24px rgba(0,0,0,0.6);
-  z-index: 11;
-  pointer-events: none;
-}
-
-/* Menu buttons */
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: center;
-  z-index: 11;
-}
-
-.menu-btn {
-  min-width: 220px;
-  padding: 14px 28px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(180deg, rgba(0,179,255,0.18), rgba(0,119,179,0.12));
-  border: 1px solid rgba(0,179,255,0.25);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
-  box-shadow:
-    0 0 12px rgba(0,179,255,0.12),
-    0 6px 18px rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.menu-btn:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 0 20px rgba(0,179,255,0.28),
-    0 10px 30px rgba(0,0,0,0.55);
-  background: linear-gradient(180deg, rgba(0,179,255,0.28), rgba(0,119,179,0.18));
-}
-
-/* Footer neon */
-.neon-footer {
-  margin-top: 18px;
-  font-size: 14px;
-  color: var(--neon-red);
-  text-shadow:
-    0 0 6px rgba(255,77,77,0.9),
-    0 0 12px rgba(255,77,77,0.6);
-  z-index: 11;
-  pointer-events: none;
-}
-
-/* Responsive tweaks */
-@media (max-width: 520px) {
-  .menu-btn { min-width: 160px; padding: 12px 20px; font-size: 16px; }
-  .audio-btn { width: 40px; height: 40px; font-size: 18px; top: 12px; right: 12px; }
-  .neon-footer { font-size: 12px; }
-}
+  <script src="script.js"></script>
+</body>
+</html>
