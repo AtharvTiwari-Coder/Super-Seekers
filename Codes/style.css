@@ -73,12 +73,16 @@ body {
   font-size: 1.2em;
   color: black; /* Base text color */
 
-  /* Black neon glow effect */
+  /* Black neon glow + gold outline */
   text-shadow: 
     0 0 5px #000,
     0 0 10px #000,
     0 0 20px #000,
-    0 0 40px #000;
+    0 0 40px #000,
+    0 0 5px gold,
+    0 0 10px gold,
+    0 0 20px gold,
+    0 0 40px gold;
 }
 
 /* Audio toggle button styling */
