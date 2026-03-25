@@ -3,6 +3,13 @@ body {
   background: #000;
   color: white;
   font-family: 'Claigo', sans-serif;
+
+  /* Flexbox centering for all content */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Full viewport height */
   text-align: center;
 }
 
@@ -19,25 +26,35 @@ body {
 }
 
 #gameTitle {
-  margin-top: 40px;
-  font-size: 3em;
+  font-size: clamp(2.5em, 6vw, 4.5em); /* Responsive scaling */
   font-weight: bold;
   color: white;
   letter-spacing: 0.15em;
-  text-shadow: 0 0 10px white, 0 0 20px white;
+
+  /* Intense white glow + thick black neon aura */
+  text-shadow: 
+    0 0 25px white,
+    0 0 50px white,
+    0 0 75px white,
+    0 0 100px white,
+    0 0 40px #000,
+    0 0 80px #000,
+    0 0 120px #000,
+    0 0 160px #000,
+    0 0 200px #000;
 }
 
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 100px;
+  gap: 25px;
+  margin-top: 50px;
   align-items: center;
 }
 
 .play-btn, .settings-btn, .exit-btn {
-  padding: 15px 40px;
-  font-size: 1.5em;
+  padding: clamp(12px, 2vw, 18px) clamp(30px, 5vw, 50px);
+  font-size: clamp(1.2em, 3vw, 1.8em); /* Responsive scaling */
   font-weight: bold;
   color: white;
   background: royalblue;
@@ -70,19 +87,19 @@ body {
 
 #footerText {
   margin-top: 40px;
-  font-size: 1.2em;
+  font-size: clamp(1em, 2.5vw, 1.5em); /* Responsive scaling */
   color: black; /* Base text color */
 
-  /* Black neon glow + gold outline */
+  /* Black neon glow + strong gold outline */
   text-shadow: 
-    0 0 5px #000,
-    0 0 10px #000,
-    0 0 20px #000,
-    0 0 40px #000,
-    0 0 5px gold,
-    0 0 10px gold,
-    0 0 20px gold,
-    0 0 40px gold;
+    0 0 15px #000,
+    0 0 30px #000,
+    0 0 60px #000,
+    0 0 90px #000,
+    0 0 30px gold,
+    0 0 60px gold,
+    0 0 90px gold,
+    0 0 120px gold;
 }
 
 /* Audio toggle button styling */
