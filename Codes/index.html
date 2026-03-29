@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MAP_1 Seeker Demo — Fixed Boundaries</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+      }
+      #mapCanvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+        image-rendering: pixelated;
+        z-index: 5;
+        transform-origin: 0 0;
+        will-change: transform;
+      }
+      #triangle-seeker {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-bottom: 32px solid #ff4d4d;
+        filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #ff4d4d)
+          drop-shadow(0 0 8px #ff4d4d);
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        transition: transform 0.12s linear;
+        pointer-events: none;
+        z-index: 50;
+        will-change: transform, left, top;
+      }
+      #triangle-seeker::after {
+        content: "";
+        position: absolute;
+        top: -5px;
+        left: -2px;
+        width: 4px;
+        height: 6px;
+        background: #000;
+        border-radius: 50%;
+      }
+      .compass-seeker {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 80px;
+        height: 80px;
+        border: 2px solid #ff4d4d;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ff4d4d;
+        font-family: monospace;
+        font-size: 12px;
+        box-shadow: 0 0 10px #ff4d4d;
+        z-index: 60;
+      }
+      .coords-seeker {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        color: #ff4d4d;
+        font-family: monospace;
+        font-size: 13px;
+        text-shadow: 0 0 6px #ff4d4d;
+        z-index: 60;
+      }
+      .trail-seeker {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-bottom: 32px solid #ff4d4d;
+        filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #ff4d4d)
+          drop-shadow(0 0 8px #ff4d4d);
+        opacity: 0.6;
+        transform: translate(-50%, -50%);
+        animation: fadeOutSeeker 0.5s forwards;
+        pointer-events: none;
+        z-index: 40;
+      }
+      @keyframes fadeOutSeeker {
+        to {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.9);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="mapCanvas"></canvas>
+    <div id="triangle-seeker"></div>
+    <div class="compass-seeker">UP</div>
+    <div class="coords-seeker">X: 0, Y: 0</div>
+
+    <script>
+      // important config
+      const TILE = 32;
+      const RADIUS = 6;
+      const SEEKER_WIDTH = 40;
+      const SEEKER_HEIGHT = 32;
+      const SEEKER_SPEED = 3.5;
+      const VISUAL_SCALE_X = 1.12;
+
+      const SCROLL_TRIGGER_X = 80;
+      const SCROLL_TRIGGER_Y = 500;
+      const SCROLL_AMOUNT = 120;
+      const SCROLL_LERP = 0.12;
+
+      const canvas = document.getElementById("mapCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#000"; // draw thin black stroke to preserve tile boundaries
+      ctx.lineWidth = 1;
+
+      const triangleSeeker = document.getElementById("triangle-seeker");
+      const compassSeeker = document.querySelector(".compass-seeker");
+      const coordsSeeker = document.querySelector(".coords-seeker");
+
+      const img = new Image();
+      img.src = "MAP_1-SET-1.png";
+
+      const keys = {
+        ArrowUp: false,
+        ArrowDown: false,
+        ArrowLeft: false,
+        ArrowRight: false,
+        w: false,
+        a: false,
+        s: false,
+        d: false,
+      };
+
+      let posX = 48,
+        posY = 48;
+      let lastRotation = 0;
+      let collision = [];
+      let mapCols = 0,
+        mapRows = 0;
+      let scrollY = 0,
+        targetScrollY = 0;
+
+      function buildCollisionGrid(image, tileSize = TILE) {
+        const off = document.createElement("canvas");
+        off.width = image.width;
+        off.height = image.height;
+        const offCtx = off.getContext("2d");
+        offCtx.drawImage(image, 0, 0);
+        const data = offCtx.getImageData(0, 0, image.width, image.height).data;
+
+        const cols = Math.floor(image.width / tileSize);
+        const rows = Math.floor(image.height / tileSize);
+        const grid = new Array(rows);
+        for (let y = 0; y < rows; y++) {
+          grid[y] = new Array(cols).fill(0);
+          for (let x = 0; x < cols; x++) {
+            let yellow = 0,
+              total = 0;
+            for (let ty = 0; ty < tileSize; ty++) {
+              for (let tx = 0; tx < tileSize; tx++) {
+                const px =
+                  (y * tileSize + ty) * image.width + (x * tileSize + tx);
+                const r = data[px * 4],
+                  g = data[px * 4 + 1],
+                  b = data[px * 4 + 2];
+                if (r > 200 && g > 200 && b < 100) yellow++;
+                total++;
+              }
+            }
+            grid[y][x] = yellow / total > 0.3 ? 1 : 0;
+          }
+        }
+        return { grid, cols, rows };
+      }
+
+      function isWallAt(grid, tx, ty) {
+        if (!grid) return false;
+        if (ty < 0 || ty >= grid.length) return false;
+        if (tx < 0 || tx >= grid[0].length) return false;
+        return grid[ty][tx] === 1;
+      }
+
+      function drawTileWithCornerRounding(
+        grid,
+        tx,
+        ty,
+        size = TILE,
+        radius = RADIUS,
+      ) {
+        const x = tx * size;
+        const y = ty * size;
+        const up = isWallAt(grid, tx, ty - 1);
+        const down = isWallAt(grid, tx, ty + 1);
+        const left = isWallAt(grid, tx - 1, ty);
+        const right = isWallAt(grid, tx + 1, ty);
+
+        const roundTL = !up && !left;
+        const roundTR = !up && !right;
+        const roundBR = !down && !right;
+        const roundBL = !down && !left;
+
+        ctx.beginPath();
+        if (roundTL) ctx.moveTo(x + radius, y);
+        else ctx.moveTo(x, y);
+        if (roundTR) ctx.lineTo(x + size - radius, y);
+        else ctx.lineTo(x + size, y);
+        if (roundTR) ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
+        if (roundBR) ctx.lineTo(x + size, y + size - radius);
+        else ctx.lineTo(x + size, y + size);
+        if (roundBR)
+          ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+        if (roundBL) ctx.lineTo(x + radius, y + size);
+        else ctx.lineTo(x, y + size);
+        if (roundBL) ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
+        if (roundTL) ctx.lineTo(x, y + radius);
+        else ctx.lineTo(x, y);
+        if (roundTL) ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke(); // stroke creates visible boundaries between adjacent tiles
+      }
+
+      function drawMazeGrid(grid) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "royalblue";
+        for (let y = 0; y < grid.length; y++) {
+          for (let x = 0; x < grid[y].length; x++) {
+            if (grid[y][x] === 1)
+              drawTileWithCornerRounding(grid, x, y, TILE, RADIUS);
+          }
+        }
+      }
+
+      function createTrail(xLogical, yLogical, rotation) {
+        const trail = document.createElement("div");
+        trail.className = "trail-seeker";
+        trail.style.left = xLogical * VISUAL_SCALE_X + "px";
+        trail.style.top = yLogical - scrollY + "px";
+        trail.style.transform = `translate(-50%,-50%) rotate(${rotation}deg)`;
+        document.body.appendChild(trail);
+        setTimeout(() => trail.remove(), 520);
+      }
+
+      function clampToCanvas(px, py) {
+        const halfW = SEEKER_WIDTH / 2,
+          halfH = SEEKER_HEIGHT / 2;
+        const minX = halfW,
+          minY = halfH;
+        const maxX = canvas.width - halfW,
+          maxY = canvas.height - halfH;
+        return {
+          x: Math.max(minX, Math.min(maxX, px)),
+          y: Math.max(minY, Math.min(maxY, py)),
+        };
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key in keys) keys[e.key] = true;
+      });
+      document.addEventListener("keyup", (e) => {
+        if (e.key in keys) keys[e.key] = false;
+      });
+
+      img.onload = () => {
+        const result = buildCollisionGrid(img, TILE);
+        collision = result.grid;
+        mapCols = result.cols;
+        mapRows = result.rows;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        canvas.style.width = canvas.width * VISUAL_SCALE_X + "px";
+        canvas.style.height = canvas.height + "px";
+
+        outer: for (let y = 0; y < mapRows; y++) {
+          for (let x = 0; x < mapCols; x++) {
+            if (collision[y][x] === 0) {
+              posX = x * TILE + TILE / 2;
+              posY = y * TILE + TILE / 2;
+              break outer;
+            }
+          }
+        }
+
+        triangleSeeker.style.zIndex = 50;
+
+        function loop() {
+          let dx = 0,
+            dy = 0;
+          let rotation = null;
+          let moving = false;
+
+          if ((keys.ArrowUp || keys.w) && (keys.ArrowRight || keys.d)) {
+            dy -= SEEKER_SPEED;
+            dx += SEEKER_SPEED;
+            rotation = 45;
+            compassSeeker.textContent = "UP RIGHT";
+            moving = true;
+          } else if ((keys.ArrowUp || keys.w) && (keys.ArrowLeft || keys.a)) {
+            dy -= SEEKER_SPEED;
+            dx -= SEEKER_SPEED;
+            rotation = -45;
+            compassSeeker.textContent = "UP LEFT";
+            moving = true;
+          } else if (
+            (keys.ArrowDown || keys.s) &&
+            (keys.ArrowRight || keys.d)
+          ) {
+            dy += SEEKER_SPEED;
+            dx += SEEKER_SPEED;
+            rotation = 135;
+            compassSeeker.textContent = "DOWN RIGHT";
+            moving = true;
+          } else if ((keys.ArrowDown || keys.s) && (keys.ArrowLeft || keys.a)) {
+            dy += SEEKER_SPEED;
+            dx -= SEEKER_SPEED;
+            rotation = -135;
+            compassSeeker.textContent = "DOWN LEFT";
+            moving = true;
+          } else if (keys.ArrowUp || keys.w) {
+            dy -= SEEKER_SPEED;
+            rotation = 0;
+            compassSeeker.textContent = "UP";
+            moving = true;
+          } else if (keys.ArrowDown || keys.s) {
+            dy += SEEKER_SPEED;
+            rotation = 180;
+            compassSeeker.textContent = "DOWN";
+            moving = true;
+          } else if (keys.ArrowLeft || keys.a) {
+            dx -= SEEKER_SPEED;
+            rotation = -90;
+            compassSeeker.textContent = "LEFT";
+            moving = true;
+          } else if (keys.ArrowRight || keys.d) {
+            dx += SEEKER_SPEED;
+            rotation = 90;
+            compassSeeker.textContent = "RIGHT";
+            moving = true;
+          } else {
+            compassSeeker.textContent = "IDLE";
+          }
+
+          let proposedX = posX + dx;
+          let proposedY = posY + dy;
+
+          const clamped = clampToCanvas(proposedX, proposedY);
+          proposedX = clamped.x;
+          proposedY = clamped.y;
+
+          const tileX = Math.floor(proposedX / TILE);
+          const tileY = Math.floor(proposedY / TILE);
+
+          if (tileY >= 0 && tileY < mapRows && tileX >= 0 && tileX < mapCols) {
+            if (collision[tileY][tileX] === 0) {
+              posX = proposedX;
+              posY = proposedY;
+              if (moving && rotation !== null)
+                createTrail(posX, posY, rotation);
+            } else {
+              const tileXOnly = Math.floor((posX + dx) / TILE);
+              const tileYOnly = Math.floor((posY + dy) / TILE);
+              let moved = false;
+              if (
+                tileY >= 0 &&
+                tileY < mapRows &&
+                tileXOnly >= 0 &&
+                tileXOnly < mapCols &&
+                collision[tileY][tileXOnly] === 0
+              ) {
+                posX = posX + dx;
+                moved = true;
+              }
+              if (
+                !moved &&
+                tileYOnly >= 0 &&
+                tileYOnly < mapRows &&
+                tileX >= 0 &&
+                tileX < mapCols &&
+                collision[tileYOnly][tileX] === 0
+              ) {
+                posY = posY + dy;
+                moved = true;
+              }
+              const cl = clampToCanvas(posX, posY);
+              posX = cl.x;
+              posY = cl.y;
+              if (moved && moving && rotation !== null)
+                createTrail(posX, posY, rotation);
+            }
+          }
+
+          if (posX >= SCROLL_TRIGGER_X || posY >= SCROLL_TRIGGER_Y) {
+            const desired = Math.min(
+              canvas.height - window.innerHeight,
+              Math.max(0, posY - SCROLL_TRIGGER_Y + SCROLL_AMOUNT),
+            );
+            targetScrollY = desired;
+          } else {
+            targetScrollY = 0;
+          }
+
+          scrollY += (targetScrollY - scrollY) * SCROLL_LERP;
+
+          canvas.style.transform = `translateY(${-scrollY}px) scaleX(${VISUAL_SCALE_X})`;
+          triangleSeeker.style.left = posX * VISUAL_SCALE_X + "px";
+          triangleSeeker.style.top = posY - scrollY + "px";
+
+          if (rotation !== null) {
+            lastRotation = rotation;
+            triangleSeeker.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${moving ? 1.15 : 1})`;
+          } else {
+            triangleSeeker.style.transform = `translate(-50%,-50%) rotate(${lastRotation}deg) scale(1)`;
+          }
+
+          drawMazeGrid(collision);
+          coordsSeeker.textContent = `X: ${Math.round(posX)}, Y: ${Math.round(posY)}`;
+          requestAnimationFrame(loop);
+        }
+
+        loop();
+      };
+
+      img.onerror = () => {
+        canvas.width = 640;
+        canvas.height = 480;
+        collision = Array.from(
+          { length: Math.floor(canvas.height / TILE) },
+          () => Array(Math.floor(canvas.width / TILE)).fill(0),
+        );
+        drawMazeGrid(collision);
+        requestAnimationFrame(function fallbackLoop() {
+          requestAnimationFrame(fallbackLoop);
+        });
+      };
+    </script>
+  </body>
+</html>
