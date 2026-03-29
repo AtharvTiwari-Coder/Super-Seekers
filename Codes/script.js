@@ -16,9 +16,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const audio = document.getElementById("bgAudio");
   const toggleBtn = document.getElementById("audioToggle");
 
-  // Audio toggle button logic (only control)
+  // Audio toggle
   if (toggleBtn && audio) {
-    // Default: muted until user clicks
     audio.muted = true;
     audio.volume = 0;
 
@@ -29,15 +28,16 @@ document.addEventListener("DOMContentLoaded", function() {
         audio.play().catch(err => {
           console.log("Playback blocked until user gesture:", err);
         });
-        toggleBtn.textContent = "🔊"; // sound on
+        toggleBtn.textContent = "🔊";
       } else {
         audio.muted = true;
         audio.volume = 0;
-        toggleBtn.textContent = "🔇"; // sound off
+        toggleBtn.textContent = "🔇";
       }
     });
   }
 
+  // Intro video
   if (video) {
     video.removeAttribute("controls");
     video.addEventListener("contextmenu", e => e.preventDefault());
