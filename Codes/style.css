@@ -4,12 +4,12 @@ body {
   color: white;
   font-family: 'Claigo', sans-serif;
 
-  /* Flexbox centering for all content */
+  /* Layout centering */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Full viewport height */
+  min-height: 100vh;
   text-align: center;
 }
 
@@ -26,12 +26,12 @@ body {
 }
 
 #gameTitle {
-  font-size: clamp(2.5em, 6vw, 4.5em); /* Responsive scaling */
+  font-size: clamp(2.5em, 6vw, 4.5em);
   font-weight: bold;
   color: white;
   letter-spacing: 0.15em;
 
-  /* Intense white glow + thick black neon aura */
+  /* Title glow */
   text-shadow: 
     0 0 25px white,
     0 0 50px white,
@@ -54,7 +54,7 @@ body {
 
 .play-btn, .settings-btn, .exit-btn {
   padding: clamp(12px, 2vw, 18px) clamp(30px, 5vw, 50px);
-  font-size: clamp(1.2em, 3vw, 1.8em); /* Responsive scaling */
+  font-size: clamp(1.2em, 3vw, 1.8em);
   font-weight: bold;
   color: white;
   background: royalblue;
@@ -87,10 +87,10 @@ body {
 
 #footerText {
   margin-top: 40px;
-  font-size: clamp(1em, 2.5vw, 1.5em); /* Responsive scaling */
-  color: black; /* Base text color */
+  font-size: clamp(1em, 2.5vw, 1.5em);
+  color: black;
 
-  /* Black neon glow + strong gold outline */
+  /* Footer glow */
   text-shadow: 
     0 0 15px #000,
     0 0 30px #000,
@@ -102,7 +102,7 @@ body {
     0 0 120px gold;
 }
 
-/* Audio toggle button styling */
+/* Audio toggle */
 .audio-btn {
   position: fixed;
   top: 15px;
