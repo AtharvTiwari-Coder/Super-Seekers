@@ -19,7 +19,7 @@ audioToggle.onclick = () => {
 };
 
 function startGame() {
-  window.location.href = "Game/Game.html";
+  window.location.href = "BEFOREGame/BEFOREGame.html";
 }
 
 function openSettings() {
