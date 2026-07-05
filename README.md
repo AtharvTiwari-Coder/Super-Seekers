@@ -1,2 +1,3 @@
 # Super-Seekers
-It is a hide and seek game
+!PROJECT CLOSED!
+It was a hide and seek game.
