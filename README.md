@@ -1,3 +1,3 @@
 # Super-Seekers
-!PROJECT CLOSED!
+!PROJECT CLOSED! \n
 It was a hide and seek game.
